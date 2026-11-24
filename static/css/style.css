@@ -1,0 +1,165 @@
+
+/* General layout */
+body {
+    background-color: #f1f5f9;
+    color: #24354d;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Header */
+header.bg-dark {
+    background-color: #172b45 !important;
+}
+
+header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #cbd5e1;
+    font-size: 15px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.card-body {
+    padding: 24px;
+}
+
+.card h2 {
+    font-weight: 600;
+    color: #172b45;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 7px;
+    padding: 9px 18px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.btn-outline-primary {
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Order table */
+.table {
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+.table th {
+    padding: 14px;
+    background-color: #172b45;
+    color: white;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 14px;
+    font-size: 14px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #eff6ff;
+}
+
+/* Order status */
+.badge {
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge.text-bg-warning {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+.badge.text-bg-primary {
+    background-color: #dbeafe !important;
+    color: #1d4ed8 !important;
+}
+
+.badge.text-bg-info {
+    background-color: #ede9fe !important;
+    color: #6d28d9 !important;
+}
+
+.badge.text-bg-success {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+}
+
+/* Connection information */
+#current-method {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+#last-updated {
+    color: #64748b;
+}
+
+#connection-status {
+    font-weight: 600;
+}
+
+/* Footer */
+footer.bg-dark {
+    background-color: #172b45 !important;
+}
+
+footer p {
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+/* Responsive layout */
+@media (max-width: 576px) {
+    header h1 {
+        font-size: 23px;
+    }
+
+    .card-body {
+        padding: 16px;
+    }
+
+    .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .table th,
+    .table td {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
