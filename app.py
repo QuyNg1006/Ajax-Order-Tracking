@@ -1,11 +1,12 @@
+
 from pathlib import Path
 import json
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
-# Resolve the data file relative to app.py, not the terminal directory.
+# Resolve the data file relative to app.py.
 ORDERS_FILE = Path(__file__).resolve().parent / 'data' / 'orders.json'
 
 
@@ -17,8 +18,8 @@ def load_orders():
 
 @app.get('/')
 def index():
-    # Temporary backend landing page. Day 2 will render Quy's template.
-    return '<h1>Live Order Tracking - Backend</h1><p><a href="/api/orders">View orders API</a></p>'
+    # Load orders and render the frontend template.
+    return render_template('index.html', orders=load_orders())
 
 
 @app.get('/api/orders')
