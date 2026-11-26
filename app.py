@@ -104,5 +104,27 @@ def update_order(order_id):
         return data_error()
 
 
+@app.get('/api/orders/poll')
+def poll_orders():
+    # Revision is a non-negative integer, not a timestamp.
+    try:
+        since = int(request.args.get('since', '0'))
+        if since < 0:
+            raise ValueError
+    except ValueError:
+        return jsonify({'error': 'Invalid since'}), 400
+    try:
+        with condition:
+            # wait_for releases the lock while sleeping, so PUT can proceed.
+            # A lower revision after restart also triggers a fresh snapshot.
+            changed = condition.wait_for(lambda: version != since, timeout=20)
+            orders = load_orders() if changed else []
+            response = jsonify({'changed': changed, 'version': version, 'orders': orders})
+            response.headers['Cache-Control'] = 'no-store'
+            return response
+    except (OSError, ValueError):
+        return data_error()
+
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, threaded=True)
