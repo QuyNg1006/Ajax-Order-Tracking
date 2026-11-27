@@ -285,8 +285,11 @@
 
     <!-- Javascript -->
 
-    <script src="{{ url_for('static', filename='js/app.js') }}">
-    </script>
+    <!-- Long Polling JavaScript - Load first -->
+<script src="{{ url_for('static', filename='js/long-polling.js') }}"></script>
+
+<!-- Main Application JavaScript - Load after Long Polling -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
 

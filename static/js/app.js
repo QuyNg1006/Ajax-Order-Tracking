@@ -2,76 +2,37 @@
 // Wait until the HTML document has been loaded.
 document.addEventListener("DOMContentLoaded", function () {
 
-    // HTML Elements
+    // ==========================================
+    // 1. HTML ELEMENTS
+    // ==========================================
 
-    // Get the update method buttons.
     const btnReload = document.getElementById("btn-reload");
     const btnFetch = document.getElementById("btn-fetch");
     const btnPolling = document.getElementById("btn-polling");
     const btnRefresh = document.getElementById("btn-refresh");
 
-    // Get the order table.
     const orderTableBody = document.getElementById("order-table-body");
 
-    // Get the connection information elements.
     const currentMethod = document.getElementById("current-method");
     const lastUpdated = document.getElementById("last-updated");
     const connectionStatus = document.getElementById("connection-status");
 
-    // Get loading and error messages.
     const loadingMessage = document.getElementById("loading-message");
     const errorMessage = document.getElementById("error-message");
 
-    // Default update method.
+
+    // ==========================================
+    // 2. APPLICATION STATE
+    // ==========================================
+
     let selectedMethod = "reload";
 
-    // Display the initial page loading time.
     lastUpdated.textContent = new Date().toLocaleString();
 
 
-    // Select Update Method
-
-    function selectMethod(method) {
-
-        selectedMethod = method;
-
-        // Reset all button styles.
-        [btnReload, btnFetch, btnPolling].forEach(function (button) {
-
-            button.classList.remove("btn-primary");
-            button.classList.add("btn-outline-primary");
-
-        });
-
-        // Highlight Full-Page Reload.
-        if (method === "reload") {
-
-            btnReload.classList.remove("btn-outline-primary");
-            btnReload.classList.add("btn-primary");
-
-            currentMethod.textContent = "Full-Page Reload";
-
-        }
-
-        // Highlight AJAX Fetch.
-        else if (method === "fetch") {
-
-            btnFetch.classList.remove("btn-outline-primary");
-            btnFetch.classList.add("btn-primary");
-
-            currentMethod.textContent = "AJAX Fetch";
-
-        }
-
-        // Reset previous error messages.
-        errorMessage.classList.add("d-none");
-
-        updateConnectionStatus("Ready", "success");
-
-    }
-
-
-    // Connection Status
+    // ==========================================
+    // 3. CONNECTION STATUS
+    // ==========================================
 
     function updateConnectionStatus(message, type) {
 
@@ -84,11 +45,85 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
         connectionStatus.classList.add("text-" + type);
-
     }
 
 
-    // Order Status Color
+    // ==========================================
+    // 4. STOP LONG POLLING
+    // ==========================================
+
+    function stopPolling() {
+
+        if (window.OrderPolling &&
+            window.OrderPolling.isRunning()) {
+
+            window.OrderPolling.stop();
+
+        }
+    }
+
+
+    // ==========================================
+    // 5. SELECT UPDATE METHOD
+    // ==========================================
+
+    function selectMethod(method) {
+
+        selectedMethod = method;
+
+        // Stop Long Polling when switching to another method.
+        if (method !== "polling") {
+            stopPolling();
+        }
+
+        // Reset all button styles.
+        [btnReload, btnFetch, btnPolling].forEach(function (button) {
+
+            button.classList.remove("btn-primary");
+            button.classList.add("btn-outline-primary");
+
+        });
+
+        // Highlight the selected method.
+        if (method === "reload") {
+
+            btnReload.classList.remove("btn-outline-primary");
+            btnReload.classList.add("btn-primary");
+
+            currentMethod.textContent = "Full-Page Reload";
+
+        }
+
+        else if (method === "fetch") {
+
+            btnFetch.classList.remove("btn-outline-primary");
+            btnFetch.classList.add("btn-primary");
+
+            currentMethod.textContent = "AJAX Fetch";
+
+        }
+
+        else if (method === "polling") {
+
+            btnPolling.classList.remove("btn-outline-primary");
+            btnPolling.classList.add("btn-primary");
+
+            currentMethod.textContent = "Long Polling";
+
+        }
+
+        // Hide previous error messages.
+        errorMessage.classList.add("d-none");
+
+        loadingMessage.classList.add("d-none");
+
+        updateConnectionStatus("Ready", "success");
+    }
+
+
+    // ==========================================
+    // 6. ORDER STATUS COLOR
+    // ==========================================
 
     function getStatusClass(status) {
 
@@ -110,18 +145,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 return "text-bg-secondary";
 
         }
-
     }
 
 
-    // Update Order Table
+    // ==========================================
+    // 7. UPDATE ORDER TABLE
+    // ==========================================
 
     function renderOrders(orders) {
 
-        // Create new table content without reloading the page.
         const fragment = document.createDocumentFragment();
 
-        // Handle an empty order list.
+        // Handle empty order data.
         if (orders.length === 0) {
 
             const row = document.createElement("tr");
@@ -134,9 +169,10 @@ document.addEventListener("DOMContentLoaded", function () {
             row.appendChild(cell);
             fragment.appendChild(row);
 
-        } else {
+        }
 
-            // Create a table row for each order.
+        else {
+
             orders.forEach(function (order) {
 
                 const row = document.createElement("tr");
@@ -145,11 +181,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 const idCell = document.createElement("td");
                 idCell.textContent = order.id;
 
-                // Customer name.
+                // Customer.
                 const customerCell = document.createElement("td");
                 customerCell.textContent = order.customer;
 
-                // Order status.
+                // Status.
                 const statusCell = document.createElement("td");
                 const statusBadge = document.createElement("span");
 
@@ -160,11 +196,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 statusCell.appendChild(statusBadge);
 
-                // Last update time.
+                // Updated time.
                 const timeCell = document.createElement("td");
                 timeCell.textContent = order.updated_at;
 
-                // Add all cells to the row.
                 row.appendChild(idCell);
                 row.appendChild(customerCell);
                 row.appendChild(statusCell);
@@ -176,23 +211,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-        // Replace only the table body.
+        // Update only the table body.
         orderTableBody.replaceChildren(fragment);
-
     }
 
 
-    // AJAX Fetch
+    // ==========================================
+    // 8. AJAX FETCH
+    // ==========================================
 
     async function fetchOrders() {
 
-        // Show loading message.
+        // Make sure Long Polling is stopped.
+        stopPolling();
+
+        loadingMessage.textContent = "Loading orders...";
         loadingMessage.classList.remove("d-none");
 
-        // Hide previous error messages.
         errorMessage.classList.add("d-none");
 
-        // Prevent multiple requests while loading.
         btnRefresh.disabled = true;
         btnReload.disabled = true;
         btnFetch.disabled = true;
@@ -202,41 +239,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
 
-            // Send an asynchronous GET request to Flask.
+            // Send asynchronous GET request.
             const response = await fetch("/api/orders", {
                 method: "GET",
                 cache: "no-store"
             });
 
-            // Check HTTP response status.
             if (!response.ok) {
-
                 throw new Error("HTTP error: " + response.status);
-
             }
 
-            // Convert the JSON response to JavaScript data.
             const orders = await response.json();
 
-            // Verify the response format.
             if (!Array.isArray(orders)) {
-
                 throw new Error("Invalid order data");
-
             }
 
-            // Update only the order table.
+            // Render the latest orders.
             renderOrders(orders);
 
-            // Update the last successful refresh time.
-            lastUpdated.textContent = new Date().toLocaleString();
+            lastUpdated.textContent =
+                new Date().toLocaleString();
 
-            // Display successful connection status.
             updateConnectionStatus("Connected", "success");
 
-        } catch (error) {
+        }
 
-            // Display error information.
+        catch (error) {
+
             errorMessage.textContent =
                 "Unable to load orders. " + error.message;
 
@@ -246,25 +276,131 @@ document.addEventListener("DOMContentLoaded", function () {
 
             console.error("AJAX Fetch error:", error);
 
-        } finally {
+        }
 
-            // Hide loading message after the request finishes.
+        finally {
+
             loadingMessage.classList.add("d-none");
 
-            // Enable the buttons again.
             btnRefresh.disabled = false;
             btnReload.disabled = false;
             btnFetch.disabled = false;
             btnPolling.disabled = false;
 
         }
-
     }
 
 
-    // Button Events
+    // ==========================================
+    // 9. LONG POLLING
+    // ==========================================
 
-    // Select Full-Page Reload.
+    function startPolling() {
+
+        // Check whether the Long Polling library is loaded.
+        if (!window.OrderPolling) {
+
+            errorMessage.textContent =
+                "Long Polling script is not loaded.";
+
+            errorMessage.classList.remove("d-none");
+
+            updateConnectionStatus("Error", "danger");
+
+            console.error("OrderPolling is not available.");
+
+            return;
+        }
+
+        // Stop an existing polling session before starting another.
+        stopPolling();
+
+        loadingMessage.classList.add("d-none");
+        errorMessage.classList.add("d-none");
+
+        updateConnectionStatus("Connecting...", "warning");
+
+        // Start continuous Long Polling.
+        window.OrderPolling.start(
+
+            // Callback 1: Receive new orders.
+            function (orders) {
+
+                renderOrders(orders);
+
+                lastUpdated.textContent =
+                    new Date().toLocaleString();
+
+                errorMessage.classList.add("d-none");
+
+            },
+
+            // Callback 2: Handle connection states.
+            function (state) {
+
+                switch (state) {
+
+                    case "waiting":
+
+                        updateConnectionStatus(
+                            "Waiting for updates...",
+                            "warning"
+                        );
+
+                        break;
+
+                    case "updated":
+
+                        updateConnectionStatus(
+                            "Data updated",
+                            "success"
+                        );
+
+                        break;
+
+                    case "timeout":
+
+                        updateConnectionStatus(
+                            "Connected - No changes",
+                            "success"
+                        );
+
+                        break;
+
+                    case "error":
+
+                        updateConnectionStatus(
+                            "Connection error",
+                            "danger"
+                        );
+
+                        break;
+
+                }
+
+            },
+
+            // Callback 3: Handle errors.
+            function (error) {
+
+                errorMessage.textContent =
+                    "Long Polling error: " + error.message;
+
+                errorMessage.classList.remove("d-none");
+
+                console.error("Long Polling error:", error);
+
+            }
+
+        );
+    }
+
+
+    // ==========================================
+    // 10. BUTTON EVENTS
+    // ==========================================
+
+    // Full-Page Reload.
     btnReload.addEventListener("click", function () {
 
         selectMethod("reload");
@@ -272,7 +408,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    // Select AJAX Fetch.
+    // AJAX Fetch.
     btnFetch.addEventListener("click", function () {
 
         selectMethod("fetch");
@@ -280,23 +416,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    // Refresh orders using the selected method.
+    // Long Polling.
+    btnPolling.addEventListener("click", function () {
+
+        selectMethod("polling");
+
+        // Long Polling starts immediately when selected.
+        startPolling();
+
+    });
+
+
+    // Refresh Orders.
     btnRefresh.addEventListener("click", function () {
 
         if (selectedMethod === "reload") {
 
-            // Reload the entire web page.
+            // Reload the entire page.
             window.location.reload();
 
-        } else if (selectedMethod === "fetch") {
+        }
 
-            // Update orders without reloading the page.
+        else if (selectedMethod === "fetch") {
+
+            // Update the table using AJAX Fetch.
             fetchOrders();
+
+        }
+
+        else if (selectedMethod === "polling") {
+
+            // Restart Long Polling.
+            startPolling();
 
         }
 
     });
 
-    // Long Polling will be integrated on Day 3.
+
+    // ==========================================
+    // 11. INITIALIZATION
+    // ==========================================
+
+    updateConnectionStatus("Ready", "success");
 
 });
